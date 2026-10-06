@@ -306,11 +306,56 @@ The system achieves the Week 1 milestone:
 
 ---
 
+## Week 2 Integration Plan
+
+### Week 1 Completion Status
+Week 1 is already completed and tested at approximately 100,000 mock orders per second (benchmarked at ~100,149 orders/sec producer rate and ~98,234 orders/sec consumer drain with zero dropped orders across 300,000 orders).
+
+### Scope of Week 2
+Week 2 consists of:
+1. **Cython Limit Order Book using Price-Time Priority**: A high-performance, compiled order matching engine implementing Price-Time Priority (FIFO) matching semantics for limit, market, and cancellation orders with direct pointer access to avoid Python object allocation.
+2. **Curses real-time latency/order-book dashboard**: A terminal-based real-time dashboard visualizing Depth of Market (Level 2 order book) alongside live system latency distributions and throughput metrics.
+
+### Expected Connection & Dataflow
+The expected connection across the pipeline is:
+`Week 1 mmap consumer → Cython matching engine → dashboard metrics`
+
+```
+┌───────────────────────────────┐
+│     Week 1 mmap Consumer      │   Drains 32-byte binary order structs zero-copy from ring buffer
+└───────────────┬───────────────┘
+                │ Direct in-memory order stream
+                ▼
+┌───────────────────────────────┐
+│    Cython Matching Engine     │   Maintains Price-Time Priority LOB (Bids/Asks, Matches, Cancels)
+└───────────────┬───────────────┘
+                │ Live book state & performance telemetry
+                ▼
+┌───────────────────────────────┐
+│       Dashboard Metrics       │   Curses terminal UI (Real-time DOM, latency percentiles, rates)
+└───────────────────────────────┘
+```
+
+- **Ingestion**: The Week 1 `mmap` consumer reads 32-byte binary packed orders directly from shared memory.
+- **Matching**: Orders are passed directly to the Cython Limit Order Book matching engine for execution and book updates using Price-Time Priority.
+- **Metrics Emission**: The matching engine continuously aggregates and emits live book state and telemetry to the Curses dashboard.
+
+### Information Exposed to the Dashboard
+The Cython matching engine exposes the following real-time market data and telemetry to the Curses dashboard:
+- **Best Bid**: Top-of-book highest buy price and aggregate quantity at that price level.
+- **Best Ask**: Top-of-book lowest sell price and aggregate quantity at that price level.
+- **Spread**: Difference between the best ask and best bid (`best_ask - best_bid`).
+- **Total Processed Orders**: Cumulative count of orders ingested and processed (matched or placed on the book).
+- **Throughput**: Real-time order processing rate expressed in orders per second.
+- **Latency Measurements**: Microsecond-level latency tracking across the pipeline, including minimum, mean, P99 percentile, and maximum latency.
+
+---
+
 ## 🔮 Roadmap: Upcoming Implementations
 
-- [ ] **Week 2**: **Cython Matching Engine**
+- [ ] **Week 2**: **Cython Matching Engine & Curses Dashboard**
   - Implement price-time priority Limit Order Book (LOB) in Cython/C.
-  - Direct pointer access to ring buffer slots without intermediate Python objects.
-- [ ] **Week 3**: **Curses Dashboard**
-  - Terminal-based real-time DOM (Depth of Market) Level 2 book viewer.
-  - Live throughput, latency percentile, and spread tracking.
+  - Terminal-based real-time DOM (Depth of Market) Level 2 book viewer with live latency/throughput metrics.
+- [ ] **Week 3**: **Multi-Symbol & Lock-Free Multi-Producer Extensions**
+  - Multi-symbol routing and advanced lock-free concurrency structures.
+
