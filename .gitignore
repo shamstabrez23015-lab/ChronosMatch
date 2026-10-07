@@ -9,3 +9,12 @@ data/*.bin
 htmlcov/
 .venv/
 env/
+
+# Cython build artifacts
+*.pyd
+*.c
+*.html
+build/
+dist/
+*.egg-info/
+distutils.cfg

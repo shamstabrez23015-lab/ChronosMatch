@@ -1,0 +1,4 @@
+; C:\msys64\mingw64\bin\dlltool.exe --dllname python313.dll --output-def python313.def --export-all-symbols C:\Program Files\Python313\libs\python313.lib
+EXPORTS
+	__NULL_IMPORT_DESCRIPTOR @ 1 DATA
+	__IMPORT_DESCRIPTOR_python313 @ 2 DATA
