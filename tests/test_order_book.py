@@ -156,18 +156,25 @@ class TestAddOrderStub:
 
 
 # ---------------------------------------------------------------------------
-# cancel_order stub
+# cancel_order — validates cancel behaviour
 # ---------------------------------------------------------------------------
-class TestCancelOrderStub:
-    def test_cancel_bid_returns_zero(self):
+class TestCancelOrder:
+    def test_cancel_existing_bid_returns_zero(self):
         lob = LimitOrderBook(symbol_id=1001)
+        lob.add_order(42, 100, 150.0, 10, 1, 1)
         rc = lob.cancel_order(order_id=42, side=1)
         assert rc == 0
 
-    def test_cancel_ask_returns_zero(self):
+    def test_cancel_existing_ask_returns_zero(self):
         lob = LimitOrderBook(symbol_id=1001)
+        lob.add_order(43, 100, 150.0, 10, 2, 1)
         rc = lob.cancel_order(order_id=43, side=2)
         assert rc == 0
+
+    def test_cancel_nonexistent_returns_minus_two(self):
+        lob = LimitOrderBook(symbol_id=1001)
+        rc = lob.cancel_order(order_id=999, side=1)
+        assert rc == -2
 
     def test_cancel_invalid_side_returns_minus_one(self):
         lob = LimitOrderBook(symbol_id=1001)
